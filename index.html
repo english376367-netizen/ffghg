@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vocabulary Writing Practice</title>
+<style>
+  :root { --blue:#2563eb; --light:#eff6ff; --green:#15803d; --red:#b91c1c; --ink:#1f2937; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:Arial,Helvetica,sans-serif; background:#f3f6fb; color:var(--ink); }
+  .wrap { max-width:1000px; margin:0 auto; padding:20px 14px 40px; }
+  header { background:linear-gradient(135deg,#2563eb,#7c3aed); color:white; border-radius:18px; padding:22px 20px; margin-bottom:16px; }
+  h1 { margin:0 0 8px; font-size:clamp(22px,4vw,32px); }
+  header p { margin:0; line-height:1.5; }
+  .summary { display:flex; flex-wrap:wrap; gap:10px; margin:14px 0; }
+  .pill { background:white; border-radius:12px; padding:10px 14px; box-shadow:0 2px 8px #1f293710; font-weight:700; }
+  .tablebox { background:white; border-radius:16px; overflow:hidden; box-shadow:0 4px 18px #1f293710; }
+  table { width:100%; border-collapse:collapse; }
+  th { background:#dbeafe; color:#1e3a8a; text-align:left; padding:13px 12px; }
+  td { border-top:1px solid #e5e7eb; padding:12px; vertical-align:middle; }
+  tbody tr:nth-child(even) { background:#fafcff; }
+  .num { width:48px; color:#64748b; font-weight:700; }
+  .vietnamese { font-weight:600; line-height:1.45; }
+  .english-cell { min-width:240px; }
+  input { width:100%; min-width:0; padding:11px 10px; border:1.5px solid #cbd5e1; border-radius:9px; font-size:16px; }
+  input:focus { outline:3px solid #bfdbfe; border-color:var(--blue); }
+  input.correct { border-color:#16a34a; background:#f0fdf4; }
+  input.incorrect { border-color:#dc2626; background:#fef2f2; }
+  .check { margin-top:7px; border:0; border-radius:8px; padding:8px 12px; background:var(--blue); color:white; font-weight:700; cursor:pointer; }
+  .check:hover { background:#1d4ed8; }
+  .feedback { margin-top:7px; font-size:14px; line-height:1.45; overflow-wrap:anywhere; }
+  .ok { color:var(--green); font-weight:700; }
+  .bad { color:var(--red); }
+  .answer { font-weight:700; color:#1d4ed8; }
+  .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
+  .actions button { border:0; border-radius:10px; padding:12px 16px; font-size:15px; font-weight:700; cursor:pointer; }
+  .primary { background:#16a34a; color:white; }
+  .secondary { background:#e2e8f0; color:#1e293b; }
+  .note { color:#64748b; font-size:13px; margin:12px 2px; }
+  @media(max-width:620px) {
+    .wrap { padding:12px 8px 28px; }
+    header { padding:18px 15px; }
+    table, tbody, tr, td { display:block; width:100%; }
+    thead { display:none; }
+    tbody tr { padding:12px; border-top:1px solid #e5e7eb; }
+    td { border:0; padding:4px 0; }
+    .num { display:inline; width:auto; }
+    .num::after { content:"."; }
+    .vietnamese { display:inline; }
+    .english-cell { min-width:0; margin-top:9px; }
+    .english-cell::before { content:"Write in English"; display:block; font-size:12px; color:#64748b; margin-bottom:5px; }
+    .check { width:100%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Vocabulary Writing Practice</h1>
+    <p>Read the Vietnamese meaning and write the English word or phrase. Check each answer separately.</p>
+  </header>
+  <div class="summary">
+    <div class="pill">Checked: <span id="checkedCount">0</span>/28</div>
+    <div class="pill">Correct: <span id="correctCount">0</span>/28</div>
+    <div class="pill">Score: <span id="score">0%</span></div>
+  </div>
+  <div class="tablebox">
+    <table>
+      <thead><tr><th style="width:55px">No.</th><th>Vietnamese</th><th>Write the English word / phrase</th></tr></thead>
+      <tbody id="vocabRows"></tbody>
+    </table>
+  </div>
+  <div class="actions">
+    <button class="primary" id="checkAll">Check all answers</button>
+    <button class="secondary" id="reset">Try again</button>
+  </div>
+  <p class="note">Spelling must be correct. Capital letters do not matter. Hyphens and spaces should match the answer.</p>
+</div>
+<script>
+const words = [
+  {en:"medicine", vi:"y học; thuốc", ipa:"/ˈmedsn/", pos:"noun"},
+  {en:"volunteer", vi:"tình nguyện", ipa:"/ˌvɒlənˈtɪə(r)/", pos:"verb"},
+  {en:"resistance war", vi:"cuộc kháng chiến", ipa:"/rɪˈzɪs.təns wɔːr/", pos:"noun phrase"},
+  {en:"account", vi:"sự tường thuật", ipa:"/əˈkaʊnt/", pos:"noun"},
+  {en:"enemy", vi:"kẻ thù", ipa:"/ˈen.ə.mi/", pos:"noun"},
+  {en:"soldier", vi:"lính; chiến sĩ", ipa:"/ˈsəʊldʒə(r)/", pos:"noun"},
+  {en:"surgeon", vi:"bác sĩ phẫu thuật", ipa:"/ˈsɜːdʒən/", pos:"noun"},
+  {en:"diary", vi:"nhật ký", ipa:"/ˈdaɪəri/", pos:"noun"},
+  {en:"devote", vi:"cống hiến", ipa:"/dɪˈvəʊt/", pos:"verb"},
+  {en:"field hospital", vi:"bệnh viện dã chiến", ipa:"/fiːld ˈhɒs.pɪ.təl/", pos:"noun phrase"},
+  {en:"operate on", vi:"phẫu thuật", ipa:"/ˈɒpəreɪt ɒn/", pos:"phrasal verb"},
+  {en:"impressive", vi:"ấn tượng", ipa:"/ɪmˈpresɪv/", pos:"adjective"},
+  {en:"translate", vi:"dịch", ipa:"/trænzˈleɪt/", pos:"verb"},
+  {en:"base on", vi:"dựa vào", ipa:"/beɪs ɒn/", pos:"phrase"},
+  {en:"achievement", vi:"thành tựu", ipa:"/əˈtʃiːvmənt/", pos:"noun"},
+  {en:"phonograph", vi:"máy quay đĩa", ipa:"/ˈfəʊ.nə.ɡrɑːf/", pos:"noun"},
+  {en:"invention", vi:"phát minh", ipa:"/ɪnˈvenʃn/", pos:"noun"},
+  {en:"admire for", vi:"ngưỡng mộ", ipa:"/ədˈmaɪər fɔːr/", pos:"phrase"},
+  {en:"childhood", vi:"tuổi thơ", ipa:"/ˈtʃaɪldhʊd/", pos:"noun"},
+  {en:"marriage", vi:"hôn nhân", ipa:"/ˈmærɪdʒ/", pos:"noun"},
+  {en:"attend (school/college)", vi:"đi học (trường đại học/cao đẳng)", ipa:"/əˈtend/", pos:"verb"},
+  {en:"apply to", vi:"nộp vào; ứng tuyển", ipa:"/əˈplaɪ/", pos:"phrase"},
+  {en:"successful", vi:"thành công", ipa:"/səkˈsesfl/", pos:"adjective"},
+  {en:"take care of", vi:"chăm sóc", ipa:"/teɪk ker ɒv/", pos:"phrase"},
+  {en:"army", vi:"quân đội", ipa:"/ˈɑːmi/", pos:"noun"},
+  {en:"blow", vi:"thổi", ipa:"/bləʊ/", pos:"verb"},
+  {en:"fireplace", vi:"lò sưởi", ipa:"/ˈfaɪəpleɪs/", pos:"noun"},
+  {en:"documentary", vi:"phim tài liệu", ipa:"/ˌdɒkjuˈmentri/", pos:"noun"}
+];
+const rows = document.getElementById("vocabRows");
+const states = words.map(() => ({checked:false, correct:false}));
+function render() {
+  rows.innerHTML = words.map((w,i) => `
+    <tr>
+      <td class="num">${i+1}</td>
+      <td><div class="vietnamese">${w.vi}</div><div class="feedback" id="meta-${i}" hidden></div></td>
+      <td class="english-cell">
+        <input id="answer-${i}" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="English answer for ${w.vi}" placeholder="Write in English">
+        <button class="check" type="button" data-index="${i}">Check</button>
+        <div class="feedback" id="feedback-${i}" aria-live="polite"></div>
+      </td>
+    </tr>`).join("");
+  rows.querySelectorAll("button[data-index]").forEach(b => b.addEventListener("click", () => checkOne(Number(b.dataset.index))));
+  updateSummary();
+}
+function normalize(s) { return s.trim().toLocaleLowerCase().replace(/\s+/g," "); }
+function checkOne(i) {
+  const input = document.getElementById(`answer-${i}`);
+  const feedback = document.getElementById(`feedback-${i}`);
+  const meta = document.getElementById(`meta-${i}`);
+  const value = normalize(input.value);
+  if (!value) {
+    feedback.innerHTML = '<span class="bad">Please write an answer first.</span>';
+    return;
+  }
+  states[i].checked = true;
+  states[i].correct = value === normalize(words[i].en);
+  input.classList.toggle("correct", states[i].correct);
+  input.classList.toggle("incorrect", !states[i].correct);
+  feedback.innerHTML = states[i].correct
+    ? '<span class="ok">Correct! +1 point</span>'
+    : `<span class="bad">Not quite.</span> Correct answer: <span class="answer">${words[i].en}</span>`;
+  meta.hidden = false;
+  meta.innerHTML = `<span>${words[i].ipa}</span> · <span>${words[i].pos}</span>`;
+  updateSummary();
+}
+function updateSummary() {
+  const checked = states.filter(s=>s.checked).length;
+  const correct = states.filter(s=>s.checked && s.correct).length;
+  document.getElementById("checkedCount").textContent = checked;
+  document.getElementById("correctCount").textContent = correct;
+  document.getElementById("score").textContent = `${Math.round(correct / words.length * 100)}%`;
+}
+document.getElementById("checkAll").addEventListener("click", () => {
+  words.forEach((_,i) => {
+    if (document.getElementById(`answer-${i}`).value.trim()) checkOne(i);
+    else {
+      const f = document.getElementById(`feedback-${i}`);
+      f.innerHTML = '<span class="bad">No answer entered.</span>';
+    }
+  });
+});
+document.getElementById("reset").addEventListener("click", () => {
+  states.forEach(s => {s.checked=false; s.correct=false;});
+  words.forEach((_,i) => {
+    const input = document.getElementById(`answer-${i}`);
+    input.value = ""; input.classList.remove("correct","incorrect");
+    document.getElementById(`feedback-${i}`).textContent = "";
+    const meta = document.getElementById(`meta-${i}`);
+    meta.hidden = true; meta.textContent = "";
+  });
+  updateSummary();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+render();
+</script>
+</body>
+</html>
